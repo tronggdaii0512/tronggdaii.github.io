@@ -2,19 +2,18 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Thu Chi 12 Tháng</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-
 body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     background:#0f172a;
     color:white;
 }
 
-/* ===== LOGIN ===== */
+/* LOGIN */
 .login-screen{
     position:fixed;
     inset:0;
@@ -25,7 +24,6 @@ body{
     flex-direction:column;
     z-index:999;
 }
-
 .login-box{
     background:#1e293b;
     padding:30px;
@@ -34,16 +32,13 @@ body{
     max-width:350px;
     text-align:center;
 }
-
 .login-box input{
     width:100%;
     padding:14px;
     border-radius:12px;
     border:none;
     margin:15px 0;
-    font-size:16px;
 }
-
 .login-box button{
     width:100%;
     padding:14px;
@@ -52,10 +47,9 @@ body{
     background:#22c55e;
     color:white;
     font-weight:bold;
-    font-size:16px;
 }
 
-/* ===== MAIN ===== */
+/* MAIN */
 .header{
     padding:20px;
     text-align:center;
@@ -63,37 +57,29 @@ body{
     font-weight:700;
     background:#111827;
 }
-
 .container{padding:15px}
-
 .card{
     background:#1e293b;
     border-radius:18px;
     padding:16px;
     margin-bottom:16px;
 }
-
 .month{
     font-weight:600;
     margin-bottom:10px;
 }
-
 .row{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:12px;
 }
-
 .row input{
-    min-width:0;
     padding:14px;
     border-radius:14px;
     border:none;
-    font-size:17px;
+    font-size:16px;
     font-weight:bold;
-    outline:none;
 }
-
 .thu{background:#052e1a;color:#22c55e;}
 .chi{background:#3b0a0a;color:#ef4444;}
 
@@ -102,7 +88,6 @@ body{
     font-weight:bold;
     text-decoration:underline;
 }
-
 .green{color:#22c55e}
 .red{color:#ef4444}
 .gray{color:#cbd5e1}
@@ -115,6 +100,47 @@ body{
     font-weight:bold;
     text-decoration:underline;
 }
+
+/* POPUP */
+#dailyPopup{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+.popup-box{
+    background:#1e293b;
+    padding:20px;
+    border-radius:16px;
+    width:90%;
+    max-width:350px;
+}
+.popup-box input{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:10px;
+    border:none;
+}
+.popup-box button{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    margin-top:5px;
+    font-weight:bold;
+}
+.save-btn{background:#22c55e;color:white;}
+.close-btn{background:#ef4444;color:white;}
+
+.daily-item{
+    font-size:13px;
+    margin-top:5px;
+    color:#cbd5e1;
+}
 </style>
 </head>
 <body>
@@ -125,7 +151,7 @@ body{
         <h2>🔐 Nhập mật khẩu</h2>
         <input type="password" id="password" placeholder="Mật khẩu">
         <button onclick="checkLogin()">Mở</button>
-        <div id="error" style="color:#ef4444;margin-top:10px;"></div>
+        <div id="error" style="color:#ef4444;"></div>
     </div>
 </div>
 
@@ -135,40 +161,58 @@ body{
     <div class="container" id="app"></div>
 </div>
 
+<!-- POPUP -->
+<div id="dailyPopup">
+    <div class="popup-box">
+        <h3>Nhập thu chi ngày</h3>
+        <input type="date" id="dailyDate">
+        <input type="text" inputmode="numeric" id="dailyThu" placeholder="Thu">
+        <input type="text" inputmode="numeric" id="dailyChi" placeholder="Chi">
+        <button class="save-btn" onclick="saveDaily()">Lưu</button>
+        <button class="close-btn" onclick="closeDaily()">Đóng</button>
+    </div>
+</div>
+
 <script>
-const APP_PASSWORD = "123456"; // đổi mật khẩu tại đây
+const APP_PASSWORD="123456";
+let currentMonth=0;
+let dailyData=JSON.parse(localStorage.getItem("dailyData"))||{};
 
 function checkLogin(){
-    const pass = document.getElementById("password").value;
-    if(pass === APP_PASSWORD){
+    if(document.getElementById("password").value===APP_PASSWORD){
         localStorage.setItem("loggedIn","yes");
-        document.getElementById("loginScreen").style.display="none";
-        document.getElementById("appContent").style.display="block";
+        openApp();
     }else{
         document.getElementById("error").innerText="Sai mật khẩu!";
     }
 }
 
-if(localStorage.getItem("loggedIn")==="yes"){
+function openApp(){
     document.getElementById("loginScreen").style.display="none";
     document.getElementById("appContent").style.display="block";
 }
 
-/* ===== TẠO 12 THÁNG ===== */
-const app = document.getElementById("app");
+if(localStorage.getItem("loggedIn")==="yes") openApp();
+
+/* TẠO 12 THÁNG */
+const app=document.getElementById("app");
 
 for(let i=1;i<=12;i++){
     const card=document.createElement("div");
     card.className="card";
     card.innerHTML=`
-        <div class="month">Tháng ${i}</div>
-        <div class="row">
-            <input type="text" inputmode="numeric" class="thu" id="thu${i}" placeholder="Thu">
-            <input type="text" inputmode="numeric" class="chi" id="chi${i}" placeholder="Chi">
-        </div>
-        <div class="result gray" id="conlai${i}">
-            ➖ Còn lại: 0 đ
-        </div>
+    <div class="month">
+        Tháng ${i}
+        <button onclick="openDaily(${i})"
+        style="float:right;background:#334155;border:none;color:white;padding:4px 8px;border-radius:8px;font-size:12px;">
+        + Ngày</button>
+    </div>
+    <div class="row">
+        <input type="text" inputmode="numeric" class="thu" id="thu${i}" placeholder="Thu">
+        <input type="text" inputmode="numeric" class="chi" id="chi${i}" placeholder="Chi">
+    </div>
+    <div class="result gray" id="conlai${i}">➖ Còn lại: 0 đ</div>
+    <div id="dailyBox${i}"></div>
     `;
     app.appendChild(card);
 }
@@ -176,34 +220,18 @@ for(let i=1;i<=12;i++){
 const yearBox=document.createElement("div");
 yearBox.className="year-box gray";
 yearBox.id="yearResult";
-yearBox.innerHTML=`
-💵 Tổng thu năm: 0 đ <br>
-💸 Tổng chi năm: 0 đ <br>
-➖ Còn lại năm: 0 đ
-`;
 app.appendChild(yearBox);
 
-/* ===== FORMAT ===== */
-function cleanNumber(v){ return v.replace(/\D/g,''); }
-function formatMoney(v){ return v?Number(v).toLocaleString("vi-VN"):""; }
+function cleanNumber(v){return v.replace(/\D/g,'');}
+function formatMoney(v){return v?Number(v).toLocaleString("vi-VN"):"";}
+function getNumber(id){return Number(cleanNumber(document.getElementById(id).value))||0;}
 
-function formatInput(el){
-    let raw=cleanNumber(el.value);
-    el.value=raw?formatMoney(raw):"";
-}
-
-function getNumber(id){
-    return Number(cleanNumber(document.getElementById(id).value))||0;
-}
-
-/* ===== UPDATE ===== */
 function update(){
     let totalThu=0,totalChi=0;
 
     for(let i=1;i<=12;i++){
         let thu=getNumber("thu"+i);
         let chi=getNumber("chi"+i);
-
         totalThu+=thu;
         totalChi+=chi;
 
@@ -215,20 +243,19 @@ function update(){
         if(conlai<0){icon="⬇️";color="red";}
 
         result.className="result "+color;
-        result.innerHTML=
-        `${icon} Còn lại: ${conlai.toLocaleString("vi-VN")} đ`;
+        result.innerHTML=`${icon} Còn lại: ${conlai.toLocaleString("vi-VN")} đ`;
     }
 
     let nam=totalThu-totalChi;
-    let yearIcon="➖",yearColor="gray";
-    if(nam>0){yearIcon="⬆️";yearColor="green";}
-    if(nam<0){yearIcon="⬇️";yearColor="red";}
+    let icon="➖",color="gray";
+    if(nam>0){icon="⬆️";color="green";}
+    if(nam<0){icon="⬇️";color="red";}
 
-    yearBox.className="year-box "+yearColor;
+    yearBox.className="year-box "+color;
     yearBox.innerHTML=`
     💵 Tổng thu năm: ${totalThu.toLocaleString("vi-VN")} đ <br>
     💸 Tổng chi năm: ${totalChi.toLocaleString("vi-VN")} đ <br>
-    ${yearIcon} Còn lại năm: ${nam.toLocaleString("vi-VN")} đ
+    ${icon} Còn lại năm: ${nam.toLocaleString("vi-VN")} đ
     `;
 
     localStorage.setItem("data",JSON.stringify(getData()));
@@ -237,10 +264,7 @@ function update(){
 function getData(){
     let data=[];
     for(let i=1;i<=12;i++){
-        data.push({
-            thu:getNumber("thu"+i),
-            chi:getNumber("chi"+i)
-        });
+        data.push({thu:getNumber("thu"+i),chi:getNumber("chi"+i)});
     }
     return data;
 }
@@ -258,10 +282,64 @@ function loadData(){
 document.addEventListener("input",function(e){
     if(e.target.classList.contains("thu")||
        e.target.classList.contains("chi")){
-        formatInput(e.target);
+        e.target.value=formatMoney(cleanNumber(e.target.value));
         update();
     }
 });
+
+/* DAILY */
+function openDaily(month){
+    currentMonth=month;
+    document.getElementById("dailyPopup").style.display="flex";
+}
+function closeDaily(){
+    document.getElementById("dailyPopup").style.display="none";
+}
+
+function saveDaily(){
+    let date=document.getElementById("dailyDate").value;
+    let thu=Number(cleanNumber(document.getElementById("dailyThu").value))||0;
+    let chi=Number(cleanNumber(document.getElementById("dailyChi").value))||0;
+
+    if(!dailyData[currentMonth]) dailyData[currentMonth]=[];
+    dailyData[currentMonth].push({date,thu,chi});
+
+    localStorage.setItem("dailyData",JSON.stringify(dailyData));
+
+    updateMonthFromDaily(currentMonth);
+    showDailyList(currentMonth);
+    closeDaily();
+}
+
+function updateMonthFromDaily(month){
+    let list=dailyData[month]||[];
+    let totalThu=0,totalChi=0;
+    list.forEach(d=>{
+        totalThu+=d.thu;
+        totalChi+=d.chi;
+    });
+
+    document.getElementById("thu"+month).value=formatMoney(totalThu);
+    document.getElementById("chi"+month).value=formatMoney(totalChi);
+    update();
+}
+
+function showDailyList(month){
+    let box=document.getElementById("dailyBox"+month);
+    box.innerHTML="";
+    let list=dailyData[month]||[];
+    list.forEach(d=>{
+        box.innerHTML+=`
+        <div class="daily-item">
+        📅 ${d.date} | +${d.thu.toLocaleString("vi-VN")} đ | -${d.chi.toLocaleString("vi-VN")} đ
+        </div>`;
+    });
+}
+
+for(let i=1;i<=12;i++){
+    showDailyList(i);
+    updateMonthFromDaily(i);
+}
 
 loadData();
 </script>
