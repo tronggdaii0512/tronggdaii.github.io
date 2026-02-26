@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Thu Chi 12 Tháng</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:#0f172a;
+    color:white;
+}
+
+/* ===== LOGIN ===== */
+.login-screen{
+    position:fixed;
+    inset:0;
+    background:#0f172a;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:999;
+}
+
+.login-box{
+    background:#1e293b;
+    padding:30px;
+    border-radius:20px;
+    width:90%;
+    max-width:350px;
+    text-align:center;
+}
+
+.login-box input{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:none;
+    margin:15px 0;
+    font-size:16px;
+}
+
+.login-box button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:#22c55e;
+    color:white;
+    font-weight:bold;
+    font-size:16px;
+}
+
+/* ===== MAIN ===== */
+.header{
+    padding:20px;
+    text-align:center;
+    font-size:22px;
+    font-weight:700;
+    background:#111827;
+}
+
+.container{padding:15px}
+
+.card{
+    background:#1e293b;
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:16px;
+}
+
+.month{
+    font-weight:600;
+    margin-bottom:10px;
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.row input{
+    min-width:0;
+    padding:14px;
+    border-radius:14px;
+    border:none;
+    font-size:17px;
+    font-weight:bold;
+    outline:none;
+}
+
+.thu{background:#052e1a;color:#22c55e;}
+.chi{background:#3b0a0a;color:#ef4444;}
+
+.result{
+    margin-top:10px;
+    font-weight:bold;
+    text-decoration:underline;
+}
+
+.green{color:#22c55e}
+.red{color:#ef4444}
+.gray{color:#cbd5e1}
+
+.year-box{
+    background:#111827;
+    padding:18px;
+    border-radius:18px;
+    margin-top:20px;
+    font-weight:bold;
+    text-decoration:underline;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <h2>🔐 Nhập mật khẩu</h2>
+        <input type="password" id="password" placeholder="Mật khẩu">
+        <button onclick="checkLogin()">Mở</button>
+        <div id="error" style="color:#ef4444;margin-top:10px;"></div>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="appContent" style="display:none;">
+    <div class="header">💰 Tổng Thu Chi 12 Tháng</div>
+    <div class="container" id="app"></div>
+</div>
+
+<script>
+const APP_PASSWORD = "123456"; // đổi mật khẩu tại đây
+
+function checkLogin(){
+    const pass = document.getElementById("password").value;
+    if(pass === APP_PASSWORD){
+        localStorage.setItem("loggedIn","yes");
+        document.getElementById("loginScreen").style.display="none";
+        document.getElementById("appContent").style.display="block";
+    }else{
+        document.getElementById("error").innerText="Sai mật khẩu!";
+    }
+}
+
+if(localStorage.getItem("loggedIn")==="yes"){
+    document.getElementById("loginScreen").style.display="none";
+    document.getElementById("appContent").style.display="block";
+}
+
+/* ===== TẠO 12 THÁNG ===== */
+const app = document.getElementById("app");
+
+for(let i=1;i<=12;i++){
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+        <div class="month">Tháng ${i}</div>
+        <div class="row">
+            <input type="text" inputmode="numeric" class="thu" id="thu${i}" placeholder="Thu">
+            <input type="text" inputmode="numeric" class="chi" id="chi${i}" placeholder="Chi">
+        </div>
+        <div class="result gray" id="conlai${i}">
+            ➖ Còn lại: 0 đ
+        </div>
+    `;
+    app.appendChild(card);
+}
+
+const yearBox=document.createElement("div");
+yearBox.className="year-box gray";
+yearBox.id="yearResult";
+yearBox.innerHTML=`
+💵 Tổng thu năm: 0 đ <br>
+💸 Tổng chi năm: 0 đ <br>
+➖ Còn lại năm: 0 đ
+`;
+app.appendChild(yearBox);
+
+/* ===== FORMAT ===== */
+function cleanNumber(v){ return v.replace(/\D/g,''); }
+function formatMoney(v){ return v?Number(v).toLocaleString("vi-VN"):""; }
+
+function formatInput(el){
+    let raw=cleanNumber(el.value);
+    el.value=raw?formatMoney(raw):"";
+}
+
+function getNumber(id){
+    return Number(cleanNumber(document.getElementById(id).value))||0;
+}
+
+/* ===== UPDATE ===== */
+function update(){
+    let totalThu=0,totalChi=0;
+
+    for(let i=1;i<=12;i++){
+        let thu=getNumber("thu"+i);
+        let chi=getNumber("chi"+i);
+
+        totalThu+=thu;
+        totalChi+=chi;
+
+        let conlai=thu-chi;
+        let result=document.getElementById("conlai"+i);
+
+        let icon="➖",color="gray";
+        if(conlai>0){icon="⬆️";color="green";}
+        if(conlai<0){icon="⬇️";color="red";}
+
+        result.className="result "+color;
+        result.innerHTML=
+        `${icon} Còn lại: ${conlai.toLocaleString("vi-VN")} đ`;
+    }
+
+    let nam=totalThu-totalChi;
+    let yearIcon="➖",yearColor="gray";
+    if(nam>0){yearIcon="⬆️";yearColor="green";}
+    if(nam<0){yearIcon="⬇️";yearColor="red";}
+
+    yearBox.className="year-box "+yearColor;
+    yearBox.innerHTML=`
+    💵 Tổng thu năm: ${totalThu.toLocaleString("vi-VN")} đ <br>
+    💸 Tổng chi năm: ${totalChi.toLocaleString("vi-VN")} đ <br>
+    ${yearIcon} Còn lại năm: ${nam.toLocaleString("vi-VN")} đ
+    `;
+
+    localStorage.setItem("data",JSON.stringify(getData()));
+}
+
+function getData(){
+    let data=[];
+    for(let i=1;i<=12;i++){
+        data.push({
+            thu:getNumber("thu"+i),
+            chi:getNumber("chi"+i)
+        });
+    }
+    return data;
+}
+
+function loadData(){
+    let data=JSON.parse(localStorage.getItem("data"));
+    if(!data)return;
+    data.forEach((d,i)=>{
+        document.getElementById("thu"+(i+1)).value=formatMoney(d.thu);
+        document.getElementById("chi"+(i+1)).value=formatMoney(d.chi);
+    });
+    update();
+}
+
+document.addEventListener("input",function(e){
+    if(e.target.classList.contains("thu")||
+       e.target.classList.contains("chi")){
+        formatInput(e.target);
+        update();
+    }
+});
+
+loadData();
+</script>
+
+</body>
+</html>
